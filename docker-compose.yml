@@ -1,0 +1,32 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5001:5000"
+    environment:
+      DB_HOST: db
+      DB_USER: flaskuser
+      DB_PASSWORD: flaskpass123
+      DB_NAME: flask_app
+    depends_on:
+      - db
+
+  db:
+    image: mysql:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: flask_app
+      MYSQL_USER: flaskuser
+      MYSQL_PASSWORD: flaskpass123
+    ports:
+      - "3307:3306"
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - web
