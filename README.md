@@ -286,16 +286,6 @@ Through this project I learned:
 
 ---
 
-# Resume Highlights
-
-- Built and deployed a Dockerized Flask application on AWS EC2
-- Configured Nginx reverse proxy for containerized services
-- Implemented CI pipeline using GitHub Actions
-- Managed multi-container architecture using Docker Compose
-- Performed cloud deployment and Linux server configuration
-
----
-
 # Author
 
 Harshit Malang
