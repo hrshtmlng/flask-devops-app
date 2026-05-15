@@ -1,6 +1,6 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 import mysql.connector
-import os, time
+import time
 from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -8,26 +8,42 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# Database connection
+# DB init
+db = None
+cursor = None
+
+# Retry DB connection
 for i in range(10):
     try:
         db = mysql.connector.connect(
-            host=os.getenv("DB_HOST"),
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME")
+            host="db",
+            user="flaskuser",
+            password="flaskpass123",
+            database="flask_app"
         )
-        print("Connected to DB")
+        cursor = db.cursor(dictionary=True)
+        print("DB connected")
         break
-    except:
-        print("Waiting for DB...")
-        time.sleep(5)
+    except Exception as e:
+        print("DB not available:", e)
+        time.sleep(2)
+        db = None
+        cursor = None
 
-cursor = db.cursor(dictionary=True)
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
+    password TEXT
+)
+""")
+db.commit()
+# ---------- ROUTES ----------
 
 @app.route("/")
 def home():
-    return jsonify({"message": "Flask DevOps App running"})
+    return render_template("index.html")
 
 
 @app.route("/health")
@@ -37,11 +53,15 @@ def health():
 
 @app.route("/register", methods=["POST"])
 def register():
+    if cursor is None:
+        return {"error": "database not connected"}
+
     data = request.get_json()
 
     name = data.get("name")
     email = data.get("email")
     password = data.get("password")
+
     hashed_password = generate_password_hash(password)
 
     sql = """
@@ -49,46 +69,48 @@ def register():
     VALUES (%s, %s, %s)
     """
 
-    values = (name, email, hashed_password)
-
-    cursor.execute(sql, values)
+    cursor.execute(sql, (name, email, hashed_password))
     db.commit()
 
-    return jsonify({
-        "message": "User stored in database"
-    }), 201
+    return {"message": "User stored in database"}, 201
+
 
 @app.route("/login", methods=["POST"])
 def login():
+    if cursor is None:
+        return {"error": "database not connected"}
+
     data = request.get_json()
 
     email = data.get("email")
     password = data.get("password")
 
-    sql = "SELECT * FROM users WHERE email = %s"
-    cursor.execute(sql, (email,))
+    cursor.execute("SELECT * FROM users WHERE email = %s", (email,))
     user = cursor.fetchone()
 
     if user and check_password_hash(user["password"], password):
-        return jsonify({
+        return {
             "message": "Login successful",
             "user": {
                 "id": user["id"],
                 "name": user["name"],
                 "email": user["email"]
             }
-        }), 200
+        }
 
-    return jsonify({
-        "message": "Invalid credentials"
-    }), 401
+    return {"message": "Invalid credentials"}, 401
+
 
 @app.route("/users")
 def users():
-    cursor.execute("SELECT id, name, email FROM users")
-    users = cursor.fetchall()
-    return jsonify(users)
+    if cursor is None:
+        return {"error": "database not connected"}
 
+    cursor.execute("SELECT id, name, email FROM users")
+    return jsonify(cursor.fetchall())
+
+
+# ---------- MAIN ----------
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)
