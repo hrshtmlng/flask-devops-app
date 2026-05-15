@@ -1,86 +1,160 @@
-# Flask DevOps App
+# Flask DevOps App 🚀
 
-A end-to-end DevOps project built using Flask, Docker, Nginx, GitHub Actions CI/CD, and AWS EC2.
-
----
-
-# Project Overview
-
-This project demonstrates a complete DevOps workflow starting from local development to cloud deployment.
-
-The application is containerized using Docker, managed using Docker Compose, reverse proxied through Nginx, tested using GitHub Actions CI pipeline, and deployed on AWS EC2.
+An end-to-end DevOps project built using Flask, Docker, Kubernetes (Minikube), Nginx, GitHub Actions CI/CD, and MySQL.
 
 ---
 
-# Tech Stack
+## Project Overview
 
-- Python Flask
-- Docker
-- Docker Compose
-- Nginx
-- GitHub Actions
-- AWS EC2
-- Ubuntu Linux
-- MySQL
+This project demonstrates a complete DevOps workflow from local development to containerization and orchestration.
+
+The application is containerized using Docker, deployed on Kubernetes (Minikube), connected to a MySQL database running in a separate pod, and exposed via a Kubernetes service.
+
+It also includes a simple UI for user registration and login.
 
 ---
 
-# Project Architecture
+## Tech Stack
 
-```text
-Client → Nginx → Flask App → MySQL Database
+- Python Flask  
+- Docker  
+- Kubernetes (Minikube)  
+- MySQL  
+- Nginx  
+- GitHub Actions  
+- Linux (Ubuntu)  
+
+---
+
+## Project Architecture
+
+```
+Client → Flask App (Pod) → MySQL (Pod)
+            ↓
+     Kubernetes Service
 ```
 
 ---
 
-# Features
+## Features
 
-- Flask backend API
-- MySQL database integration
-- Dockerized application
-- Multi-container setup using Docker Compose
-- Nginx reverse proxy configuration
-- CI pipeline using GitHub Actions
-- AWS EC2 deployment
-- Public IP accessibility
+- User Registration  
+- User Login (with password hashing)  
+- Fetch all users  
+- Flask-based UI (Signup/Login)  
+- MySQL database integration  
+- Dockerized application  
+- Kubernetes deployment (multi-pod setup)  
+- CI pipeline using GitHub Actions  
 
 ---
 
-# Folder Structure
+## Folder Structure
 
-```bash
+```
 .
 ├── .github/workflows
 │   └── ci.yml
 ├── nginx
 │   └── nginx.conf
+├── templates
+│   └── index.html
 ├── screenshots
-│   ├── docker-containers.png
-│   ├── ec2-ssh.png
-│   ├── github-actions-success.png
-│   ├── project-structure.png
-│   └── public-deployment.png
 ├── app.py
-├── docker-compose.yml
+├── deployment.yaml
+├── mysql.yaml
 ├── Dockerfile
+├── docker-compose.yml
 ├── requirements.txt
 └── README.md
 ```
 
 ---
 
-# Local Setup
+## Local Setup (Kubernetes)
 
-## Clone Repository
+### 1. Start Minikube
 
 ```bash
-git clone https://github.com/hrshtmlng/flask-devops-app.git
-cd flask-devops-app
+minikube start
+```
+
+### 2. Use Minikube Docker
+
+```bash
+eval $(minikube docker-env)
+```
+
+### 3. Build Docker Image
+
+```bash
+docker build -t flask-devops-app .
+```
+
+### 4. Deploy MySQL
+
+```bash
+kubectl apply -f mysql.yaml
+```
+
+### 5. Deploy Flask App
+
+```bash
+kubectl apply -f deployment.yaml
+```
+
+### 6. Access Application
+
+```bash
+minikube service flask-app
 ```
 
 ---
 
-## Build and Run Containers
+## API Endpoints
+
+### Register
+POST /register
+
+### Login
+POST /login
+
+### Get Users
+GET /users
+
+---
+
+## Database Setup
+
+If the table does not exist, create it manually:
+
+```sql
+USE flask_app;
+
+CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    email VARCHAR(100) UNIQUE,
+    password TEXT
+);
+```
+
+---
+
+## CI/CD Pipeline
+
+GitHub Actions automatically:
+
+- Builds Docker image  
+- Verifies project setup  
+- Runs on every push to main branch  
+
+Workflow file:
+.github/workflows/ci.yml
+
+---
+
+## Docker (Optional - Local Development)
 
 ```bash
 docker compose up --build
@@ -88,204 +162,74 @@ docker compose up --build
 
 ---
 
-## Run in Detached Mode
+## Important Commands
+
+### Check Pods
 
 ```bash
-docker compose up -d
+kubectl get pods
 ```
 
----
-
-## Check Running Containers
+### View Logs
 
 ```bash
-docker ps
+kubectl logs <pod-name>
 ```
 
----
-
-# Access Application
-
-## Local Access
-
-```text
-http://localhost
-```
-
----
-
-## EC2 Public Deployment
-
-```text
-http://YOUR_PUBLIC_IP
-```
-
----
-
-# Docker Services
-
-## Flask App Container
-
-Handles:
-- API logic
-- Backend application
-- Database connection
-
----
-
-## MySQL Container
-
-Handles:
-- Database storage
-- Persistent data
-
----
-
-## Nginx Container
-
-Handles:
-- Reverse proxy
-- Traffic forwarding
-- Port exposure
-
----
-
-# CI/CD Pipeline
-
-GitHub Actions automatically:
-
-- Builds Docker containers
-- Verifies Docker Compose setup
-- Runs on every push to main branch
-
-Workflow file location:
-
-```text
-.github/workflows/ci.yml
-```
-
----
-
-# AWS Deployment Steps
-
-1. Created AWS EC2 Ubuntu instance
-2. Connected using SSH and PEM key
-3. Installed Docker and Docker Compose
-4. Cloned GitHub repository
-5. Ran containers using Docker Compose
-6. Exposed application using public IP
-
----
-
-# Important Commands Used
-
-## Start Containers
+### Restart Deployment
 
 ```bash
-docker compose up -d
+kubectl rollout restart deployment flask-app
 ```
 
 ---
 
-## Stop Containers
+## How Project looks?
 
-```bash
-docker compose down
-```
+### UI Signup Page
+![Flask app UI signup page](screenshots/ui-signup.png)
 
----
+Shows the Flask application signup screen used for user registration.
 
-## View Logs
+### API Working
+![API working response screenshot](screenshots/api-working.png)
 
-```bash
-docker compose logs
-```
+Demonstrates the application API responding successfully to requests.
 
----
+### Kubernetes Pods
+![Kubernetes pod status screenshot](screenshots/k8s-pods.png)
 
-## Check Running Containers
+Displays deployed Kubernetes pods for the Flask app and MySQL database.
 
-```bash
-docker ps
-```
+### MySQL Database Data
+![MySQL database data screenshot](screenshots/database-data.png)
 
----
-
-## SSH Into EC2
-
-```bash
-ssh -i your-key.pem ubuntu@YOUR_PUBLIC_IP
-```
+Shows stored user data in the MySQL database.
 
 ---
 
-# Screenshots
+## Learning Outcomes
 
-## GitHub Actions Success
-
-Shows successful CI pipeline execution after pushing code to GitHub.
-
-![GitHub Actions](screenshots/github-actions-success.png)
-
----
-
-## EC2 SSH Access
-
-Connected to AWS EC2 Ubuntu instance using PEM key.
-
-![EC2 SSH](screenshots/ec2-ssh.png)
+- Docker containerization  
+- Kubernetes deployment and services  
+- Multi-pod architecture  
+- Backend ↔ Database integration  
+- CI/CD basics with GitHub Actions  
+- Debugging real-world deployment issues  
+- Linux + terminal workflow  
 
 ---
 
-## Docker Containers Running
+## Future Improvements
 
-All Docker containers running successfully using Docker Compose.
-
-![Docker Containers](screenshots/docker-containers.png)
-
----
-
-## Public Deployment
-
-Application successfully deployed and accessible using EC2 public IP.
-
-![Public Deployment](screenshots/public-deployment.png)
+- Move credentials to Kubernetes Secrets  
+- Add JWT authentication  
+- Add HTTPS (SSL)  
+- Production setup using Gunicorn + Nginx  
+- CI/CD auto-deploy to cloud (AWS/GCP)  
 
 ---
 
-## Project Structure
-
-Project folder structure inside VS Code.
-
-![Project Structure](screenshots/project-structure.png)
-
----
-
-# Learning Outcomes
-
-Through this project I learned:
-
-- Docker containerization
-- Multi-container orchestration
-- Reverse proxy configuration
-- CI/CD basics
-- AWS EC2 deployment
-- Linux server management
-- Git and GitHub workflow
-- Cloud deployment basics
-
----
-
-# Future Improvements
-
-- Kubernetes deployment
-- Terraform infrastructure automation
-- Monitoring using Prometheus and Grafana
-- HTTPS with SSL certificates
-- Automated production deployment pipeline
-
----
-
-# Author
+## Author
 
 Harshit Malang
