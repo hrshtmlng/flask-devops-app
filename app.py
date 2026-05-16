@@ -8,7 +8,7 @@ load_dotenv()
 
 app = Flask(__name__)
 
-# DB init
+# ---------------- DB INIT ----------------
 db = None
 cursor = None
 
@@ -27,20 +27,29 @@ for i in range(10):
     except Exception as e:
         print("DB not available:", e)
         time.sleep(2)
-        db = None
-        cursor = None
 
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100),
-    email VARCHAR(100) UNIQUE,
-    password TEXT
-)
-""")
-db.commit()
-# ---------- ROUTES ----------
+# If DB still not connected → exit (prevents crash loops)
+if db is None or cursor is None:
+    print("Failed to connect to DB after retries. Exiting...")
+    exit(1)
 
+# Create table safely
+try:
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(100),
+        email VARCHAR(100) UNIQUE,
+        password TEXT
+    )
+    """)
+    db.commit()
+except Exception as e:
+    print("Error creating table:", e)
+
+# ---------------- ROUTES ----------------
+
+# UI route
 @app.route("/")
 def home():
     return render_template("index.html")
@@ -54,7 +63,7 @@ def health():
 @app.route("/register", methods=["POST"])
 def register():
     if cursor is None:
-        return {"error": "database not connected"}
+        return {"error": "database not connected"}, 500
 
     data = request.get_json()
 
@@ -64,21 +73,21 @@ def register():
 
     hashed_password = generate_password_hash(password)
 
-    sql = """
-    INSERT INTO users (name, email, password)
-    VALUES (%s, %s, %s)
-    """
-
-    cursor.execute(sql, (name, email, hashed_password))
-    db.commit()
-
-    return {"message": "User stored in database"}, 201
+    try:
+        cursor.execute(
+            "INSERT INTO users (name, email, password) VALUES (%s, %s, %s)",
+            (name, email, hashed_password)
+        )
+        db.commit()
+        return {"message": "User stored in database"}, 201
+    except Exception as e:
+        return {"error": str(e)}, 400
 
 
 @app.route("/login", methods=["POST"])
 def login():
     if cursor is None:
-        return {"error": "database not connected"}
+        return {"error": "database not connected"}, 500
 
     data = request.get_json()
 
@@ -96,7 +105,7 @@ def login():
                 "name": user["name"],
                 "email": user["email"]
             }
-        }
+        }, 200
 
     return {"message": "Invalid credentials"}, 401
 
@@ -104,13 +113,13 @@ def login():
 @app.route("/users")
 def users():
     if cursor is None:
-        return {"error": "database not connected"}
+        return {"error": "database not connected"}, 500
 
     cursor.execute("SELECT id, name, email FROM users")
     return jsonify(cursor.fetchall())
 
 
-# ---------- MAIN ----------
+# ---------------- MAIN ----------------
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
