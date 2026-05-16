@@ -1,6 +1,6 @@
 # Flask DevOps App 🚀
 
-An end-to-end DevOps project built using Flask, Docker, Kubernetes (Minikube), Nginx, GitHub Actions CI/CD, and MySQL.
+An end-to-end DevOps project built using Flask, Docker, Kubernetes (Minikube), Nginx, MySQL, and a GitHub Actions CI/CD pipeline.
 
 ---
 
@@ -45,7 +45,7 @@ Client → Flask App (Pod) → MySQL (Pod)
 - MySQL database integration  
 - Dockerized application  
 - Kubernetes deployment (multi-pod setup)  
-- CI pipeline using GitHub Actions  
+- CI/CD pipeline using GitHub Actions  
 
 ---
 
@@ -143,11 +143,11 @@ CREATE TABLE users (
 
 ## CI/CD Pipeline
 
-GitHub Actions automatically:
+GitHub Actions CI/CD automatically:
 
-- Builds Docker image  
-- Verifies project setup  
-- Runs on every push to main branch  
+- Builds the Docker image  
+- Verifies the project setup  
+- Runs on every push to the main branch  
 
 Workflow file:
 .github/workflows/ci.yml
